@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidhart | Obsidian Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600&family=Playfair+Display:ital,wght@0,700;1,900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        :root {
+            --bg: #FDF5E6;
+            --text: #1B3022;
+            --accent: #4E6E58;
+            --transition-speed: 0.6s;
+        }
+
+        /* Dark Mode Variables */
+        body.dark-mode {
+            --bg: #0D0D0D; /* Deep Obsidian */
+            --text: #FDF5E6; /* Cream Text */
+            --accent: #8A9A5B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Outfit', sans-serif; 
+            overflow: hidden; 
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        /* Custom Cursor */
+        #cursor {
+            position: fixed; width: 12px; height: 12px; background: var(--text);
+            border-radius: 50%; pointer-events: none; z-index: 10000; mix-blend-mode: difference;
+        }
+
+        /* Navigation */
+        nav {
+            padding: 40px 60px; display: flex; justify-content: space-between;
+            position: fixed; width: 100%; z-index: 1000; font-size: 11px;
+            letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
+        }
+        .nav-right { display: flex; align-items: center; }
+        .nav-links span { margin-left: 30px; opacity: 0.5; transition: 0.3s; cursor: pointer; }
+        .nav-links span.active { opacity: 1; border-bottom: 2px solid var(--text); }
+
+        /* Dark Mode Toggle Button */
+        .theme-toggle {
+            margin-left: 40px; background: var(--text); color: var(--bg);
+            border: none; padding: 8px 15px; border-radius: 20px;
+            font-size: 9px; letter-spacing: 1px; font-weight: 900;
+        }
+
+        /* Page System */
+        .page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100vh;
+            display: none; padding: 0 60px; flex-direction: column;
+            justify-content: center; align-items: center; opacity: 0;
+        }
+        .page.active { display: flex; opacity: 1; }
+
+        /* Transition Swipe Overlay */
+        .swipe-overlay {
+            position: fixed; top: 0; left: -100%; width: 100%; height: 100%;
+            background: var(--text); z-index: 9999;
+        }
+
+        /* --- HOME --- */
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(5rem, 20vw, 15rem);
+            font-weight: 900; line-height: 1.1; text-align: center;
+        }
+        .hero-title span { display: inline-block; }
+        .hero-tagline { margin-top: 20px; font-size: 0.8rem; letter-spacing: 15px; opacity: 0.6; text-transform: uppercase; }
+
+        /* --- WORKS --- */
+        #works-page { justify-content: flex-start; padding-top: 150px; overflow-y: auto; }
+        .works-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 30px; width: 100%; max-width: 1400px; padding-bottom: 100px; }
+        .work-card { grid-column: span 4; cursor: pointer; }
+        .work-card.wide { grid-column: span 8; }
+        
+        .img-box { width: 100%; aspect-ratio: 4/5; overflow: hidden; background: #222; position: relative; }
+        .wide .img-box { aspect-ratio: 16/9; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); transition: 1s cubic-bezier(0.16, 1, 0.3, 1); }
+        .work-card:hover img { filter: grayscale(0%); transform: scale(1.05); }
+
+        /* --- CONTACT --- */
+        .contact-content { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 1100px; gap: 80px; align-items: center; }
+        .contact-form input, .contact-form textarea {
+            width: 100%; background: none; border: none; border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+            padding: 20px 0; margin-bottom: 25px; font-family: 'Outfit'; color: var(--text); outline: none; font-size: 1rem;
+        }
+        .wa-btn {
+            background: var(--text); color: var(--bg); padding: 22px 60px; border-radius: 100px;
+            border: none; text-transform: uppercase; letter-spacing: 3px; font-weight: 600;
+        }
+
+        /* MODAL */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); z-index: 10001;
+            display: none; justify-content: center; align-items: center;
+        }
+        .modal-img { max-width: 80%; max-height: 80vh; border-radius: 4px; }
+
+        @media (max-width: 768px) {
+            .contact-content { grid-template-columns: 1fr; }
+            .work-card, .work-card.wide { grid-column: span 12; }
+            #works-page { padding: 120px 20px; }
+            nav { padding: 20px; }
+            .nav-right { flex-direction: column; align-items: flex-end; }
+            .theme-toggle { margin: 10px 0 0 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    <div class="swipe-overlay"></div>
+
+    <nav>
+        <div class="logo">Sidhart.</div>
+        <div class="nav-right">
+            <div class="nav-links">
+                <span onclick="navigateTo('home-page')" class="active" id="link-home">Home</span>
+                <span onclick="navigateTo('works-page')" id="link-works">Works</span>
+                <span onclick="navigateTo('contact-page')" id="link-contact">Contact</span>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()">DARK MODE</button>
+        </div>
+    </nav>
+
+    <main id="home-page" class="page active">
+        <h1 class="hero-title">
+            <span class="char">SID</span><span class="char">HART</span>
+        </h1>
+        <p class="hero-tagline">OBSIDIAN ARCHIVE � 2025</p>
+    </main>
+
+    <main id="works-page" class="page">
+        <div class="works-grid">
+            <div class="work-card wide" onclick="openZoom(this)">
+                <div class="img-box"><img src="https://iili.io/fVZIWuf.jpg"></div>
+                <div style="margin-top:10px; font-size:10px;">PROJECT_01</div>
+            </div>
+            <div class="work-card" onclick="openZoom(this)">
+                <div class="img-box"><img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1000"></div>
+                <div style="margin-top:10px; font-size:10px;">PROJECT_02</div>
+            </div>
+            <div class="work-card" onclick="openZoom(this)">
+                <div class="img-box"><img src="https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1000"></div>
+                <div style="margin-top:10px; font-size:10px;">PROJECT_03</div>
+            </div>
+        </div>
+    </main>
+
+    <main id="contact-page" class="page">
+        <div class="contact-content">
+            <div>
+                <h2 style="font-family: 'Playfair Display'; font-size: 4rem; line-height: 0.9;">Direct<br>Message.</h2>
+            </div>
+            <div class="contact-form">
+                <input type="text" id="wa-name" placeholder="NAME">
+                <textarea id="wa-message" placeholder="MESSAGE" rows="3"></textarea>
+                <button class="wa-btn" onclick="sendWhatsApp()">Send to WhatsApp</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal" class="modal" onclick="closeZoom()"><img id="modal-img" class="modal-img" src=""></div>
+
+    <script>
+        // 1. Dark Mode Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.querySelector('.theme-toggle');
+            body.classList.toggle('dark-mode');
+            btn.innerText = body.classList.contains('dark-mode') ? "LIGHT MODE" : "DARK MODE";
+        }
+
+        // 2. Navigation with Cinematic Swipe
+        function navigateTo(targetPageId) {
+            const currentActive = document.querySelector('.page.active');
+            if (currentActive.id === targetPageId) return;
+
+            document.querySelectorAll('.nav-links span').forEach(s => s.classList.remove('active'));
+            document.getElementById('link-' + targetPageId.split('-')[0]).classList.add('active');
+
+            const swipe = anime.timeline({ easing: 'easeInOutExpo' });
+            swipe.add({ targets: '.swipe-overlay', left: ['-100%', '0%'], duration: 600 })
+                 .add({ update: () => {
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    document.getElementById(targetPageId).classList.add('active');
+                 }})
+                 .add({ targets: '.swipe-overlay', left: ['0%', '100%'], duration: 600, complete: () => {
+                    anime({ targets: '.page.active', opacity: [0, 1], duration: 400 });
+                    if(targetPageId === 'home-page') runHomeAnim();
+                 }});
+        }
+
+        // 3. Home Animation
+        function runHomeAnim() {
+            anime({ targets: '.hero-title .char', translateY: [120, 0], opacity: [0, 1], delay: anime.stagger(200), duration: 1200, easing: 'easeOutQuart' });
+        }
+
+        // 4. WhatsApp Logic
+        function sendWhatsApp() {
+            const phone = "919608829342"; // REPLACE WITH YOUR NUMBER
+            const name = document.getElementById('wa-name').value;
+            const msg = document.getElementById('wa-message').value;
+            if(!name || !msg) return alert("Fill Name & Message");
+            window.open(`https://wa.me/${phone}?text=*Inquiry*%0A*Name:* ${name}%0A*Msg:* ${msg}`, '_blank');
+        }
+
+        // 5. Zoom & Cursor
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        function openZoom(el) {
+            document.getElementById('modal-img').src = el.querySelector('img').src;
+            document.getElementById('modal').style.display = 'flex';
+        }
+        function closeZoom() { document.getElementById('modal').style.display = 'none'; }
+
+        runHomeAnim();
+    </script>
+</body>
+</html>
